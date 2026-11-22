@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InvestAI — Autonomous Multi-Agent Investment System</title>
+  <meta name="description" content="AI-powered investment decision system using multi-agent analysis for market trends, fundamentals, risk, sentiment, and portfolio optimization." />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header" role="banner">
+  <div class="header-brand">
+    <div class="header-icon" aria-hidden="true">🤖</div>
+    <div>
+      <div class="header-title">InvestAI</div>
+      <div class="header-subtitle">Autonomous Multi-Agent Investment System</div>
+    </div>
+  </div>
+  <div class="header-badge" role="status" aria-label="System status: Live">
+    <div class="pulse-dot"></div>
+    5 Agents Active
+  </div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<main class="main" role="main">
+
+  <!-- INPUT PANEL -->
+  <section class="input-panel" aria-label="Stock Analysis Input">
+    <div class="panel-heading">
+      <span class="panel-heading-icon" aria-hidden="true">🔍</span>
+      <div>
+        <h2>Analyze a Stock</h2>
+        <p>Enter a ticker, investment amount, and risk tolerance to run the multi-agent analysis.</p>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label" for="ticker-input">Stock Ticker</label>
+        <input
+          id="ticker-input"
+          class="form-control"
+          type="text"
+          placeholder="e.g. AAPL, MSFT, TSLA"
+          maxlength="10"
+          autocomplete="off"
+          autocapitalize="characters"
+          aria-required="true"
+        />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="amount-input">Investment Amount ($)</label>
+        <input
+          id="amount-input"
+          class="form-control"
+          type="number"
+          placeholder="10000"
+          value="10000"
+          min="100"
+          aria-required="true"
+        />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="risk-select">Risk Tolerance</label>
+        <select id="risk-select" class="form-control" aria-required="true">
+          <option value="low">🛡️ Low — Conservative</option>
+          <option value="medium" selected>⚖️ Medium — Balanced</option>
+          <option value="high">🚀 High — Aggressive</option>
+        </select>
+      </div>
+      <button id="analyze-btn" class="btn-analyze" aria-label="Run investment analysis">
+        <span id="btn-icon">⚡</span>
+        <span id="btn-text">Analyze</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ERROR BANNER -->
+  <div id="error-banner" class="error-banner" role="alert" aria-live="assertive">
+    <span>⚠️</span>
+    <span id="error-message">An error occurred. Please try again.</span>
+  </div>
+
+  <!-- LOADER -->
+  <div id="loader" class="loader-overlay" role="status" aria-label="Running multi-agent analysis">
+    <div class="spinner-ring" aria-hidden="true"></div>
+    <div class="loader-title">Running Multi-Agent Analysis…</div>
+    <div class="loader-agents" aria-label="Active agents">
+      <div class="agent-pill">📈 Market Agent</div>
+      <div class="agent-pill">🏦 Fundamental Agent</div>
+      <div class="agent-pill">⚠️ Risk Agent</div>
+      <div class="agent-pill">💬 Sentiment Agent</div>
+      <div class="agent-pill">📊 Portfolio Agent</div>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS ===== -->
+  <section id="results" aria-label="Analysis Results">
+
+    <!-- RECOMMENDATION HERO -->
+    <div class="recommendation-hero fade-in" id="rec-hero">
+      <div class="rec-left">
+        <div class="rec-ticker" id="rec-ticker">—</div>
+        <div class="rec-company-name" id="rec-company">—</div>
+        <div class="rec-price" id="rec-price">$—</div>
+        <div class="rec-price-label">Current Market Price</div>
+        <div class="rec-explanation" id="rec-explanation"></div>
+      </div>
+
+      <div class="rec-badge-container">
+        <div class="rec-badge" id="rec-badge">—</div>
+        <div class="rec-confidence">
+          Confidence: <strong id="rec-confidence">—</strong>%
+        </div>
+        <div class="rec-composite">Score: <span id="rec-score">—</span>/100</div>
+      </div>
+
+      <div>
+        <!-- Component Scores -->
+        <div class="component-scores">
+          <div class="scores-title">Agent Scores (0–100)</div>
+          <div class="score-bars">
+            <div class="score-bar-row">
+              <div class="score-bar-label">📈 Market</div>
+              <div class="score-bar-track"><div class="score-bar-fill" id="bar-market" style="width:0%"></div></div>
+              <div class="score-bar-value" id="val-market">—</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="score-bar-label">🏦 Fundamental</div>
+              <div class="score-bar-track"><div class="score-bar-fill" id="bar-fund" style="width:0%"></div></div>
+              <div class="score-bar-value" id="val-fund">—</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="score-bar-label">⚠️ Risk-Adjusted</div>
+              <div class="score-bar-track"><div class="score-bar-fill" id="bar-risk" style="width:0%"></div></div>
+              <div class="score-bar-value" id="val-risk">—</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="score-bar-label">💬 Sentiment</div>
+              <div class="score-bar-track"><div class="score-bar-fill" id="bar-sent" style="width:0%"></div></div>
+              <div class="score-bar-value" id="val-sent">—</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="score-bar-label">📊 Portfolio Fit</div>
+              <div class="score-bar-track"><div class="score-bar-fill" id="bar-port" style="width:0%"></div></div>
+              <div class="score-bar-value" id="val-port">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICE CHART (Full Width) -->
+    <div class="full-width-card fade-in">
+      <div class="card-header">
+        <div class="card-icon indigo" aria-hidden="true">📈</div>
+        <div>
+          <div class="card-title">Price History &amp; Moving Averages</div>
+          <div class="card-subtitle">60-day view with SMA 20 &amp; SMA 50 overlays</div>
+        </div>
+      </div>
+      <div class="chart-container-lg">
+        <canvas id="price-chart" aria-label="Price history chart"></canvas>
+      </div>
+    </div>
+
+    <!-- ROW 1: Market + Fundamental + Risk -->
+    <div class="analysis-grid">
+
+      <!-- Market Analysis -->
+      <div class="card fade-in" id="card-market">
+        <div class="card-header">
+          <div class="card-icon indigo" aria-hidden="true">📊</div>
+          <div>
+            <div class="card-title">Market Analysis</div>
+            <div class="card-subtitle">Technical indicators</div>
+          </div>
+        </div>
+        <div id="trend-badge-container"></div>
+        <div class="metric-grid" id="market-metrics"></div>
+        <div class="signals-grid" id="market-signals"></div>
+      </div>
+
+      <!-- Fundamental Analysis -->
+      <div class="card fade-in" id="card-fundamental">
+        <div class="card-header">
+          <div class="card-icon emerald" aria-hidden="true">🏦</div>
+          <div>
+            <div class="card-title">Fundamental Analysis</div>
+            <div class="card-subtitle">Financial health metrics</div>
+          </div>
+        </div>
+        <div class="metric-grid" id="fund-metrics"></div>
+      </div>
+
+      <!-- Risk Assessment -->
+      <div class="card fade-in" id="card-risk">
+        <div class="card-header">
+          <div class="card-icon amber" aria-hidden="true">⚠️</div>
+          <div>
+            <div class="card-title">Risk Assessment</div>
+            <div class="card-subtitle">Quantitative risk metrics</div>
+          </div>
+        </div>
+        <div class="risk-meter">
+          <div>
+            <div class="risk-level-label" id="risk-level-label">—</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">Risk Level</div>
+          </div>
+          <div class="risk-bar-outer">
+            <div class="risk-bar-inner" id="risk-bar" style="width:0%"></div>
+          </div>
+          <div class="metric-grid" id="risk-metrics"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Sentiment + Portfolio -->
+    <div class="analysis-grid-2">
+
+      <!-- Sentiment Analysis -->
+      <div class="card fade-in" id="card-sentiment">
+        <div class="card-header">
+          <div class="card-icon purple" aria-hidden="true">💬</div>
+          <div>
+            <div class="card-title">Sentiment Analysis</div>
+            <div class="card-subtitle">News NLP with VADER</div>
+          </div>
+        </div>
+        <div class="sentiment-meter">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <div class="sentiment-score-big" id="sent-score-big">—</div>
+            <div id="sent-label" style="font-size:0.85rem;color:var(--text-secondary)">—</div>
+          </div>
+          <div class="sentiment-slider-container" role="meter" aria-label="Sentiment score meter">
+            <div class="sentiment-track"></div>
+            <div class="sentiment-needle" id="sent-needle" style="left:50%"></div>
+          </div>
+          <div class="sentiment-labels">
+            <span>Very Negative</span><span>Neutral</span><span>Very Positive</span>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem;">
+            <span style="color:var(--accent-emerald)">✅ <strong id="sent-pos">—</strong> Positive</span>
+            <span style="color:var(--text-muted)">⚪ <strong id="sent-neu">—</strong> Neutral</span>
+            <span style="color:var(--accent-rose)">❌ <strong id="sent-neg">—</strong> Negative</span>
+          </div>
+        </div>
+        <div class="news-list" id="news-list" aria-label="Recent news"></div>
+      </div>
+
+      <!-- Portfolio Optimization -->
+      <div class="card fade-in" id="card-portfolio">
+        <div class="card-header">
+          <div class="card-icon cyan" aria-hidden="true">📊</div>
+          <div>
+            <div class="card-title">Portfolio Optimization</div>
+            <div class="card-subtitle">Modern Portfolio Theory allocation</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="metric-item">
+            <div class="metric-label">Expected Return</div>
+            <div class="metric-value good" id="port-return">—</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Sharpe Ratio</div>
+            <div class="metric-value" id="port-sharpe">—</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Volatility</div>
+            <div class="metric-value warn" id="port-vol">—</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Method</div>
+            <div class="metric-value" style="font-size:0.7rem;font-family:Inter,sans-serif" id="port-method">—</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Allocation</div>
+            <div class="alloc-list" id="alloc-list"></div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Portfolio Mix</div>
+            <div class="chart-container-sm">
+              <canvas id="alloc-chart" aria-label="Portfolio allocation pie chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Volatility Chart -->
+    <div class="full-width-card fade-in">
+      <div class="card-header">
+        <div class="card-icon amber" aria-hidden="true">📉</div>
+        <div>
+          <div class="card-title">Rolling 21-Day Volatility</div>
+          <div class="card-subtitle">Annualized volatility over the past 60 days</div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="vol-chart" aria-label="Volatility chart"></canvas>
+      </div>
+    </div>
+
+  </section>
+  <!-- end #results -->
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
